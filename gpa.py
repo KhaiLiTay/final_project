@@ -1,28 +1,47 @@
+##計算current gpa 有問題
+##美化畫面
+
 #!/usr/bin/python3
 
 import sys 
-grade_benchmark = {'A+': 90, 'A': 85, 'A-':80, 'B+':77, 'B':73, 'B-':70, 'C+':67, 'C':63, 'C-':60, 'D':50, 'E':0}
-gpa_benchmark = {'A+': 4.3, 'A': 4.0, 'A-':3.7, 'B+':3.3, 'B':3.0, 'B-':2.7, 'C+':2.3, 'C':2.0, 'C-':1.7, 'D':0.0, 'E':0.0}
+
+# 成績對應等級的標準和GPA
+grade_benchmark = {'A+': 90, 'A': 85, 'A-':80, 'B+':77, 'B':73, 'B-':70, 'C+':67, 'C':63, 'C-':60, 'D':50, 'F':0}
+gpa_benchmark = {'A+': 4.3, 'A': 4.0, 'A-':3.7, 'B+':3.3, 'B':3.0, 'B-':2.7, 'C+':2.3, 'C':2.0, 'C-':1.7, 'D':1.0, 'F':0.0}
+
 class Course:
     def __init__(self, name, credit):
+        # 初始化課程的屬性
         self._name = name
         self._credit = credit
-        self._grading = {}
-        self._scores = {}
-        self._final_score = 0
-        self._gpa = 0.0
-        self._grade = 'X'
+        self._grading = {}  # 評分項目及其比例
+        self._scores = {}   # 評分項目的分數
+        self._final_score = 0   # 最終得分
+        #self._gpa = 0.0    # GPA
+        self._grade = 'X'  # 等級
+        
+        self._courses = []  # 课程列表
+        self._credits = 0   # 总学分
+        self._gpa = None     # GPA
+        
     
     def view(self):
+        # 顯示課程的相關資訊，包括課程名稱、學分、各評分項目及其分數、最終得分、GPA和等級
         print("")
+        print("==========================")
         print(f'Course Name: {self._name} , Credit: {self._credit}')
+        print("==========================")
+        #print("Description" + '\t' + "Ratio" + '\t' + "Score")
+        #print("===========        ======    =====")
         for descr, ratio in self._grading.items():
             score = self._scores[descr]
-            print(f'{descr} ({ratio}%): {score}%')
-        self.set_final_score()
-        self.set_gpa()
+            print(f'{descr} ({ratio}%): {score:}%')
+        self.set_final_score()  # 計算最終得分
+        self.set_gpa()  # 計算GPA
+        print("==========================")
         print(f'Final Score : {self._final_score}')
         print(f'GPA : {self._gpa}   Grade : {self._grade}')
+        print("==========================")
 
     @property
     def get_name(self):
@@ -41,34 +60,47 @@ class Course:
         return self._gpa
     
     def set_final_score(self):
+        # 根據評分項目的分數和比例計算最終得分
         total = 0
         for desc, ratio in self._grading.items():
             score = self._scores[desc]
             total += score * (ratio / 100)
         self._final_score = total
-
+    
     def set_gpa(self):
+        # 根据最终得分计算对应的等级和GPA
+        self.set_final_score()
+
+        closest_grade = None
+        closest_point_diff = float('inf')
+
         for grade, point in grade_benchmark.items():
-            self.set_final_score()
-            if self._final_score >= point:
-                self._grade = grade
-                self._gpa = gpa_benchmark[grade]
-                break
+            point_diff = abs(self._final_score - point)
+            if point_diff < closest_point_diff:
+                closest_point_diff = point_diff
+                closest_grade = grade
+
+        if closest_grade:
+            self._grade = closest_grade
+            self._gpa = gpa_benchmark[closest_grade]
 
     def set_scores(self, descr, score):
+        # 設定評分項目的分數
         self._scores[descr] = score
 
     def add_grading(self, descr, ratio):
+        # 新增評分項目及其比例
         self._grading[descr] = ratio
         self._scores[descr] = 0
 
 class Courses:
     def __init__(self):
-        self._courses = []
-        self._credits = 0
-        self._gpa = 0.0
+        self._courses = []  # 課程列表
+        self._credits = 0   # 總學分
+        self._gpa = 0.0     # GPA
 
     def add(self):
+        # 新增課程
         while True:
             course_name = input("\n'q' to terminate | Course Name  : ")
             if course_name == 'q': break
@@ -77,6 +109,7 @@ class Courses:
             self._credits += course_credit
 
     def add_gradings(self):
+        # 為課程新增評分項目及其比例
         while True:
             self.view()
             course_name = input("\n'q' to terminate |[ADD GRADING] Course Name  : ")
@@ -91,6 +124,7 @@ class Courses:
                         course.add_grading(descr, ratio)
 
     def add_scores(self):
+        # 為課程新增評分項目的分數
         while True:
             self.view()
             course_name = input("\n'q' to terminate |[ADD SCORES] Course Name  : ")
@@ -104,6 +138,7 @@ class Courses:
                         course.set_scores(descr, score)
 
     def view(self):
+        # 顯示所有課程的名稱和學分
         if len(self._courses) == 0:
             print("\nNo available records")
             return
@@ -113,6 +148,7 @@ class Courses:
             print(f'{course.get_name} {course.get_credit}')
     
     def view_overall(self):
+        # 顯示所有課程的總得分、GPA和等級
         if len(self._courses) == 0:
             print("\nNo available records")
             return
@@ -124,8 +160,10 @@ class Courses:
             course.set_final_score()
             course.set_gpa()
             print(f'{course.get_name} (credit = {course.get_credit})  : {course.get_final_score}   , GPA : {course.get_gpa}')
+            
 
     def view_detail(self):
+        # 顯示特定課程的詳細資訊
         while True:
             self.view()
             if self.empty: return
@@ -138,10 +176,29 @@ class Courses:
 
     #TODO: function get seleceted course
 
-    def set_gpa(self):
+    '''def set_gpa(self):
+        # 計算整體GPA
         for course in self._courses:
             tmp += course.get_gpa * (course.get_credit / self._credits)
-        self._gpa = tmp
+        self._gpa = tmp'''
+        
+    def set_gpas(self):
+        # 计算整体GPA
+        total_points = 0.0  # 总绩点
+        total_credits = 0   # 总学分
+
+        for course in self._courses:
+            final_score = course.get_final_score
+            credit = course.get_credit
+
+            if final_score is not None and credit is not None:
+                total_points += final_score * credit
+                total_credits += credit
+
+        if total_credits != 0:
+            self._gpa = total_points / total_credits
+        else:
+            self._gpa = None
 
     @property
     def empty(self):
