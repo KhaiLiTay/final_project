@@ -1,4 +1,5 @@
 import os, sys, bisect, pickle, statistics
+import matplotlib.pyplot as plt
 
 CLEARCMD = 'cls' #vscode change to 'clear'
 
@@ -73,6 +74,8 @@ while True:
   match params[0]:
     case 'add':
       name, credits, *temp = params[1:]
+      credits = int(credits)
+
       weights = {}
       for i in range(0, len(temp), 2):
         weights[temp[i]] = int(temp[i + 1])
@@ -90,4 +93,13 @@ while True:
       with open('gpa_save.pkl', 'wb') as save:
         pickle.dump(courses, save, pickle.HIGHEST_PROTOCOL)
       os.system(CLEARCMD)
-      exit()
+      # 顯示柱狀圖
+      course_names = list(courses.keys())
+      course_scores = [course.grades[0] for course in courses.values()]
+
+      plt.bar(course_names, course_scores)
+      plt.xlabel('Course')
+      plt.ylabel('Percentage Grade')
+      plt.title('Grades for Courses')
+      plt.xticks(rotation=45)
+      plt.show()
