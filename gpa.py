@@ -1,5 +1,5 @@
-##計算current gpa 有問題
-##美化畫面
+#gpa部分已可以完全運行
+#卻美化
 
 #!/usr/bin/python3
 
@@ -17,14 +17,9 @@ class Course:
         self._grading = {}  # 評分項目及其比例
         self._scores = {}   # 評分項目的分數
         self._final_score = 0   # 最終得分
-        #self._gpa = 0.0    # GPA
+        self._gpa = 0.0    # GPA
         self._grade = 'X'  # 等級
-        
-        self._courses = []  # 课程列表
-        self._credits = 0   # 总学分
-        self._gpa = None     # GPA
-        
-    
+   
     def view(self):
         # 顯示課程的相關資訊，包括課程名稱、學分、各評分項目及其分數、最終得分、GPA和等級
         print("")
@@ -66,11 +61,9 @@ class Course:
             score = self._scores[desc]
             total += score * (ratio / 100)
         self._final_score = total
-    
+       
     def set_gpa(self):
-        # 根据最终得分计算对应的等级和GPA
-        self.set_final_score()
-
+        # 根據最終得分計算對應的等級和GPA
         closest_grade = None
         closest_point_diff = float('inf')
 
@@ -176,29 +169,18 @@ class Courses:
 
     #TODO: function get seleceted course
 
-    '''def set_gpa(self):
-        # 計算整體GPA
-        for course in self._courses:
-            tmp += course.get_gpa * (course.get_credit / self._credits)
-        self._gpa = tmp'''
-        
-    def set_gpas(self):
-        # 计算整体GPA
-        total_points = 0.0  # 总绩点
-        total_credits = 0   # 总学分
+    def set_overall_gpa(self):
+        # 計算總GPA
+        total_grade_points = 0
+        total_credits = 0
 
         for course in self._courses:
-            final_score = course.get_final_score
-            credit = course.get_credit
+            course.set_final_score()
+            course.set_gpa()
+            total_grade_points += (course._gpa * course._credit)
+            total_credits += course._credit
 
-            if final_score is not None and credit is not None:
-                total_points += final_score * credit
-                total_credits += credit
-
-        if total_credits != 0:
-            self._gpa = total_points / total_credits
-        else:
-            self._gpa = None
+        self._gpa = round(total_grade_points / total_credits, 2)
 
     @property
     def empty(self):
@@ -224,6 +206,7 @@ while True:
     elif cmd == "view":
         cmd = input("\n[VIEW] all / detail  : ")
         if cmd == "all":
+            courses.set_overall_gpa()
             courses.view_overall()
         elif cmd == "detail":
             courses.view_detail()
