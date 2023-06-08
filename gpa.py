@@ -23,20 +23,21 @@ class Course:
     def view(self):
         # 顯示課程的相關資訊，包括課程名稱、學分、各評分項目及其分數、最終得分、GPA和等級
         print("")
-        print("==========================")
+        print("=============================")
         print(f'Course Name: {self._name} , Credit: {self._credit}')
-        print("==========================")
-        #print("Description" + '\t' + "Ratio" + '\t' + "Score")
-        #print("===========        ======    =====")
+        print("=============================")
+        print("Description" + '\t' + "Ratio" + '\t' + "Score")
+        print("***********     *****   *****")
         for descr, ratio in self._grading.items():
             score = self._scores[descr]
-            print(f'{descr} ({ratio}%): {score:}%')
+            print(f'{descr:<15s} {ratio:<11d} {score:}%')
         self.set_final_score()  # 計算最終得分
         self.set_gpa()  # 計算GPA
-        print("==========================")
+        print("*****************************")
         print(f'Final Score : {self._final_score}')
-        print(f'GPA : {self._gpa}   Grade : {self._grade}')
-        print("==========================")
+        print(f'GPA         : {self._gpa}') 
+        print(f'Grade       : {self._grade}')
+        print("=============================")
 
     @property
     def get_name(self):
@@ -61,21 +62,23 @@ class Course:
             score = self._scores[desc]
             total += score * (ratio / 100)
         self._final_score = total
-       
+            
     def set_gpa(self):
         # 根據最終得分計算對應的等級和GPA
         closest_grade = None
         closest_point_diff = float('inf')
 
         for grade, point in grade_benchmark.items():
-            point_diff = abs(self._final_score - point)
-            if point_diff < closest_point_diff:
-                closest_point_diff = point_diff
-                closest_grade = grade
+            if self._final_score >= point:  # 修正判斷條件
+                point_diff = self._final_score - point
+                if point_diff < closest_point_diff:
+                    closest_point_diff = point_diff
+                    closest_grade = grade
 
         if closest_grade:
             self._grade = closest_grade
             self._gpa = gpa_benchmark[closest_grade]
+
 
     def set_scores(self, descr, score):
         # 設定評分項目的分數
@@ -137,8 +140,12 @@ class Courses:
             return
         
         print("")
+        print("=================")
+        print("Course" + '\t' + "Credit")
+        print("******  ******")
         for course in self._courses:
-            print(f'{course.get_name} {course.get_credit}')
+            print(f'{course.get_name:<10s} {course.get_credit:}')
+        print("=================")
     
     def view_overall(self):
         # 顯示所有課程的總得分、GPA和等級
@@ -146,14 +153,16 @@ class Courses:
             print("\nNo available records")
             return
         
-
         print("")
         print(f"Current GPA  : {self._gpa}")
+        print("===================================")
+        print("Course" + '\t' + "Credit" + '\t' + "Final Score" + '\t' + "GPA")
+        print("******  ******  ***********     ***")
         for course in self._courses:
             course.set_final_score()
             course.set_gpa()
-            print(f'{course.get_name} (credit = {course.get_credit})  : {course.get_final_score}   , GPA : {course.get_gpa}')
-            
+            print(f'{course.get_name:<16s} {course.get_credit:<7d} {course.get_final_score:<} {course.get_gpa:}')
+        print("===================================")
 
     def view_detail(self):
         # 顯示特定課程的詳細資訊
