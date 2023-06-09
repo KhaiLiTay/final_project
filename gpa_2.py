@@ -36,15 +36,18 @@ class Course:
     return delta_goal
 
 courses = {}
-try:
+try:  #already existed file
   with open('gpa_save.pkl', 'rb') as save:
     courses = pickle.load(save)
-except:
-  print('uwu no save found~ but you cant see this message~')
+  sys.stdout.write("Welcome back!")  #open existed file
+
+except FileNotFoundError: #the file does not exist
+  sys.stdout.write('uwu no save found~ but you cant see this message~')
 
 while True:
   os.system(CLEARCMD)
-
+  
+  print()
   print('——————————— courses ————————————')
   if len(courses) == 0:
     print('no courses added yet~')
@@ -61,7 +64,7 @@ while True:
     t_credits = sum([i.credits for i in courses.values()])
     t_score = statistics.mean([i.grades[0] for i in courses.values()])
     t_gpa = statistics.mean([i.grades[2] for i in courses.values()])
-    print(f'total ({t_credits}): {t_score}% | {t_gpa}')
+    print(f'total ({t_credits}): {round(t_score)}% | {t_gpa}')
     print()
 
   print('——————————— commands ———————————')
@@ -77,19 +80,84 @@ while True:
 
   match params[0]:
     case 'add':
-      name, credits, *temp = params[1:]
-      weights = {}
-      for i in range(0, len(temp), 2):
-        weights[temp[i]] = int(temp[i + 1])
-      courses[name] = Course(name, int(credits), weights)
+      try:
+        if len(params) < 5:
+          raise ValueError("Insufficient parameters. The format should be like this:\nadd Calculus 3 midterm 50 final 50")
 
+        name, credits, *temp = params[1:]
+        weights = {}
+
+        if not isinstance(name, str):
+          raise TypeError("Invalid course name. The name must be a string, e.g., Calculus")
+
+        try:
+          credits = int(credits)
+        except ValueError:
+          raise ValueError("Invalid credit value. Credit must be a number, e.g., 3")
+
+        for i in range(0, len(temp), 2):
+          try:
+            item = temp[i]
+            score = temp[i + 1]
+            if not isinstance(item, str):
+              raise TypeError("Invalid weight item. The item must be a string, e.g., midterm")
+            if not score.isdigit():
+              raise TypeError("Invalid weight score. The score must be an integer, e.g., 50")
+            weights[item] = int(score)
+          except (IndexError, TypeError):
+            sys.stderr.write("The format of weights should be like this: midterm 50\n")
+            sys.stderr.write("You can enter more than one weight, e.g., midterm 50 final 50\n\n")
+            raise
+
+        courses[name] = Course(name, int(credits), weights)
+      except (ValueError, TypeError) as e:
+        sys.stderr.write(str(e) + "\n\n")
+      except:
+        sys.stderr.write("The format of a record should be like this:\n")
+        sys.stderr.write("add Calculus 3 midterm 50 final 50\n\n")
+ 
     case 'set':
-      name, item, score = params[1:]
-      courses[name].scores[item] = int(score)
+      try:
+        if len(params) < 4:
+          raise ValueError("Invalid number of parameters. The format should be like this:\nset Calculus midterm 100")
+
+        name, item, score = params[1:]
+        if name not in courses:
+          raise ValueError("Course not found. Please make sure the course exists.")
+
+        if item not in courses[name].scores:
+          raise ValueError("Item not found. Please make sure the item exists for the course.")
+
+        try:
+          courses[name].scores[item] = int(score)       
+        except ValueError:
+          raise ValueError("Invalid score. The score should be a number, e.g., 100")
+      
+      except (ValueError, KeyError) as e:
+        sys.stderr.write(str(e) + "\n\n")
+      except:
+        sys.stderr.write("The format should be like this:\n")
+        sys.stderr.write("set Calculus midterm 100\n\n")
 
     case 'goal':
-      name, score = params[1:]
-      courses[name].goal = int(score)
+      try:
+        if len(params) < 3:
+          raise ValueError("Invalid number of parameters. The format should be like this:\ngoal Calculus 80")
+
+        name, score = params[1:]
+        if name not in courses:
+          raise ValueError("Course not found. Please make sure the course exists.")
+
+        try:
+          courses[name].goal = int(score)
+        except ValueError:
+          raise ValueError("Invalid goal. The goal should be a number, e.g., 80")
+      except (ValueError, KeyError) as e:
+          sys.stderr.write(str(e) + "\n\n")
+      except:
+          sys.stderr.write("The format should be like this:\n")
+          sys.stderr.write("goal Calculus 80\n\n")
+
 
     case 'chart':
       course_names = list(courses.keys())
@@ -107,3 +175,8 @@ while True:
         pickle.dump(courses, save, pickle.HIGHEST_PROTOCOL)
       os.system(CLEARCMD)
       exit()
+    
+    case _:
+        sys.stderr.write("Invalid command\n\n")
+        
+  input('Press Enter to continue...')
